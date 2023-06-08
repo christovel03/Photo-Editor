@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photo Editor</title>
+    <style>
+        #canvas {
+            border: 1px solid black;
+            cursor: crosshair;
+        }
+
+        #processed-image {
+            margin-top: 10px;
+            max-width: 500px;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        .editor-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .editor-container .editor-box {
+            width: 50%;
+            padding: 10px;
+        }
+
+        .editor-container .editor-box canvas {
+            max-width: 100%;
+        }
+    </style>
+    <script>
+        // Variabel global untuk menyimpan titik awal dan akhir saat pengguna melakukan crop
+        var startX, startY, endX, endY;
+
+        // Fungsi untuk menggambar persegi panjang pada canvas
+        function drawRect() {
+            var canvas = document.getElementById('canvas');
+            var context = canvas.getContext('2d');
+
+            // Menghapus gambar yang ada sebelumnya (jika ada)
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Menggambar persegi panjang dengan titik awal dan akhir yang telah ditentukan
+            context.beginPath();
+            context.rect(startX, startY, endX - startX, endY - startY);
+            context.lineWidth = 2;
+            context.strokeStyle = 'red';
+            context.stroke();
+        }
+
+        // Menginisialisasi event listener untuk menggambar crop area
+        function initCrop() {
+            var canvas = document.getElementById('canvas');
+
+            canvas.addEventListener('mousedown', function (event) {
+                startX = event.offsetX;
+                startY = event.offsetY;
+            });
+
+            canvas.addEventListener('mouseup', function (event) {
+                endX = event.offsetX;
+                endY = event.offsetY;
+                drawRect();
+                setCropValues(startX, startY, endX, endY);
+            });
+        }
+
+        // Mengisi nilai-nilai crop pada input hidden
+        function setCropValues(x1, y1, x2, y2) {
+            document.getElementById('x1').value = x1;
+            document.getElementById('y1').value = y1;
+            document.getElementById('x2').value = x2;
+            document.getElementById('y2').value = y2;
+        }
+
+        // Menampilkan gambar yang diproses saat ini
+        function displayImage(file) {
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                var img = document.getElementById('processed-image');
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</head>
+<body>
+    <h1>Photo Editor</h1>
+    <div class="editor-container">
+        <div class="editor-box">
+            <form action="/edit" method="post" enctype="multipart/form-data">
+                <div>
+                    <label for="image">Choose an image:</label>
+                    <input type="file" id="image" name="image" accept="image/*" required onchange="displayImage(this.files[0])">
+                </div>
+                <div>
+                    <input type="hidden" id="x1" name="x1">
+                    <input type="hidden" id="y1" name="y1">
+                    <input type="hidden" id="x2" name="x2">
+                    <input type="hidden" id="y2" name="y2">
+                </div>
+                <div>
+                    <input type="checkbox" name="feature" value="crop">
+                    <label for="feature">Crop</label>
+                </div>
+                <div>
+                    <input type="checkbox" name="feature" value="blur">
+                    <label for="feature">Blur</label>
+                </div>
+                <div>
+                    <input type="checkbox" name="feature" value="grayscale">
+                    <label for="feature">Grayscale</label>
+                </div>
+                <div>
+                    <input type="checkbox" name="feature" value="potrait">
+                    <label for="feature">Potrait</label>
+                </div>
+                <div>
+                    <input type="radio" name="direction" value="clockwise">
+                    <label for="direction">Clockwise</label>
+                    <input type="radio" name="direction" value="counterclockwise">
+                    <label for="direction">Counterclockwise</label>
+                </div>
+                <div>
+                    <input type="checkbox" name="feature" value="exposure">
+                    <label for="feature">Exposure</label>
+                    <input type="number" name="exposure_value" step="0.1" min="0" max="10">
+                </div>
+                <div>
+                    <input type="checkbox" name="feature" value="contrast">
+                    <label for="feature">Contrast</label>
+                    <input type="number" name="contrast_value" step="0.1" min="0" max="10">
+                </div>
+                <div>
+                    <input type="submit" value="Edit">
+                </div>
+            </form>
+        </div>
+        <div class="editor-box">
+            <canvas id="canvas" width="500" height="500"></canvas>
+            <img id="processed-image" src="" alt="Processed Image">
+        </div>
+    </div>
+    <script>
+        initCrop();
+    </script>
+</body>
+</html>
